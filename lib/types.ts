@@ -1,4 +1,4 @@
-export type Post = {id:string; title:string; body:string; mediaId:string; kind:"image"|"video"; width:number; height:number; status:"draft"|"published"; createdAt:number; updatedAt:number};
+export type Post = {id:string; title:string; body:string; mediaId:string; posterId:string|null; posterUrl:string|null; loop:boolean; kind:"image"|"video"; width:number; height:number; status:"draft"|"published"; createdAt:number; updatedAt:number};
 export type Message = {id:string; role:"visitor"|"auto"|"admin"; body:string; createdAt:number; sourceTitle:string|null};
 export type Conversation = {id:string; nickname:string; contact:string; sourceTitle:string|null; status:"open"|"archived"; unread:number; createdAt:number; updatedAt:number};
 export type ConsultSource = {kind:"post"|"topic";id:string;title:string};

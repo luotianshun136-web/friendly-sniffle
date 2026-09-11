@@ -4,8 +4,8 @@ import {AUTO_REPLY,type Conversation} from "@/lib/types";
 import {getHomepage,updateHomepage} from "@/lib/homepage";
 import {createUploadTask,getUploadTask,cancelUploadTask,cleanupExpiredUploads,uploadTaskMedia} from "@/lib/homepage-uploads";
 import {findConsultationTopic} from "@/lib/consultation-topics";
+import {POST_SELECT,presentPost,savePost} from "@/lib/posts";
 export const dynamic="force-dynamic";
-const POST_SELECT="SELECT p.*,m.kind,m.width,m.height FROM posts p JOIN media m ON p.mediaId=m.id ";
 async function handle(req:Request):Promise<Response>{
  try{
   const url=new URL(req.url),path=url.pathname.slice(5),method=req.method,db=database();
@@ -33,7 +33,7 @@ async function handle(req:Request):Promise<Response>{
   if(path==="posts"&&method==="GET"){
     const offset=Math.max(0,Math.min(100000,Number(url.searchParams.get("offset"))||0));
     const r=await db.prepare(POST_SELECT+"WHERE p.status='published' ORDER BY p.createdAt DESC,p.id DESC LIMIT 13 OFFSET ?").bind(offset).all();
-    return json({posts:r.results.slice(0,12),hasMore:r.results.length>12});
+    return json({posts:r.results.slice(0,12).map(presentPost),hasMore:r.results.length>12});
   }
   if(path.startsWith("media/")&&method==="GET"){
     return await serveMedia(req,path.slice(6));
@@ -116,9 +116,9 @@ async function handle(req:Request):Promise<Response>{
       const taskId=url.searchParams.get("taskId");
       return json(taskId?await uploadTaskMedia(req,purpose,taskId):await uploadMedia(req,purpose),201);
     }
-    if(endpoint==="media"&&method==="POST"){await throttle("upload",15,600);return json(await uploadMedia(req),201)}
+    if(endpoint==="media"&&method==="POST"){await throttle("upload",30,600);const purpose=url.searchParams.get("purpose")||"post";if(purpose!=="post"&&purpose!=="post-poster")throw new HttpError(400,"素材用途不正确。");return json(await uploadMedia(req,purpose),201)}
     if(endpoint.startsWith("media/")&&method==="DELETE"){
-      const id=endpoint.slice(6);if(await db.prepare("SELECT id FROM posts WHERE mediaId=?").bind(id).first())throw new HttpError(409,"此媒体仍被帖子使用。");
+      const id=endpoint.slice(6);if(await db.prepare("SELECT id FROM posts WHERE mediaId=? OR posterId=?").bind(id,id).first())throw new HttpError(409,"此媒体或封面仍被帖子使用。");
       if(await db.prepare("SELECT id FROM homepage_settings WHERE originalId=? OR videoId=? OR posterId=?").bind(id,id,id).first())throw new HttpError(409,"此素材正在用于首页，不能删除。");
       let m:{storageKey:string}|null;
       try{m=await db.prepare("DELETE FROM media WHERE id=? RETURNING storageKey").bind(id).first<{storageKey:string}>()}catch{throw new HttpError(409,"此素材正在使用，请刷新后重试。");}
@@ -126,14 +126,10 @@ async function handle(req:Request):Promise<Response>{
     }
     if(endpoint==="posts"&&method==="GET"){
       const offset=Math.max(0,Number(url.searchParams.get("offset"))||0),r=await db.prepare(POST_SELECT+"ORDER BY p.createdAt DESC,p.id DESC LIMIT 25 OFFSET ?").bind(offset).all();
-      return json({posts:r.results.slice(0,24),hasMore:r.results.length>24});
+      return json({posts:r.results.slice(0,24).map(presentPost),hasMore:r.results.length>24});
     }
     if((endpoint==="posts"&&method==="POST")||(endpoint.startsWith("posts/")&&method==="PATCH")){
-      const id=method==="POST"?crypto.randomUUID():endpoint.slice(6),b=await payload(req),title=field(b.title,100,true),body=field(b.body,3000),mediaId=field(b.mediaId,80,true),status=b.status==="published"?"published":"draft",now=Date.now();
-      if(!await db.prepare("SELECT id FROM media WHERE id=? AND purpose='post'").bind(mediaId).first())throw new HttpError(400,"请先上传动态媒体；首页原文件不能发布为帖子。");
-      if(method==="POST")await db.prepare("INSERT INTO posts (id,title,body,mediaId,status,createdAt,updatedAt) VALUES (?,?,?,?,?,?,?)").bind(id,title,body,mediaId,status,now,now).run();
-      else{const previous=await db.prepare("SELECT mediaId FROM posts WHERE id=?").bind(id).first();if(!previous)throw new HttpError(404,"帖子不存在。");await db.prepare("UPDATE posts SET title=?,body=?,mediaId=?,status=?,updatedAt=? WHERE id=?").bind(title,body,mediaId,status,now,id).run();}
-      return json({ok:true,id});
+      const id=method==="POST"?crypto.randomUUID():endpoint.slice(6);return json(await savePost(id,await payload(req),method==="POST"));
     }
     if(endpoint.startsWith("posts/")&&method==="DELETE"){await db.prepare("DELETE FROM posts WHERE id=?").bind(endpoint.slice(6)).run();return json({ok:true})}
   }

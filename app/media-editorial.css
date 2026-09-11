@@ -1,0 +1,30 @@
+.lineage-altar{grid-column:1/-1;margin:32px 0 0;max-width:400px;width:100%}
+.lineage figure img{display:block;width:100%;height:auto;object-fit:contain}
+.lineage figcaption{font-size:13px;line-height:1.8;color:#776570;padding-top:12px}
+.ritual-belief{margin-top:30px;padding-top:28px;border-top:1px solid #d9c0cc}
+.ritual-belief figure{margin:0 0 28px}
+.lineage-copy .belief-note{font-size:14px;line-height:1.9;color:#78656f;margin-bottom:0}
+.direction-grid .direction-text{font:inherit;color:inherit;display:flex;flex:1;min-width:0;flex-direction:column;gap:8px}
+.direction-text small{font-size:13px;line-height:1.85;color:var(--muted-foreground);font-style:normal}
+.direction-grid button>svg{flex-shrink:0}
+.journal-video{position:relative;isolation:isolate;width:100%;overflow:hidden;background:#29252a}
+.journal-video>img{width:100%;height:100%;object-fit:contain;display:block}
+.journal-video>video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.post-play{position:absolute;inset:0;margin:auto;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:#252125c9;border:1px solid #ffffffba;color:#fff;transition:background .15s}
+.post-play:hover{background:#773c51}.post-play:focus-visible{outline:3px solid white;outline-offset:5px}
+.post-cover-fallback{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#e1d5db;padding:24px;font-size:13px}
+.post-cover-fallback span{position:absolute;bottom:18px;text-align:center;left:10px;right:10px}
+.post-video-error{position:absolute;bottom:15px;left:10px;right:10px;font-size:13px;text-align:center;color:white;background:#262026df;padding:8px}
+.admin-thumbnail{display:flex;align-items:center;justify-content:center}
+.poster-editor{border:0;border-top:1px solid var(--border);padding:20px 0 0;min-width:0;display:flex;flex-direction:column;gap:16px}
+.poster-editor legend{font-size:16px;padding-right:14px}
+.poster-preview{display:block;width:100%;max-height:260px;object-fit:contain;background:#eee8ec}
+.poster-frame-controls{display:flex;align-items:flex-end;gap:12px}
+.poster-frame-controls>label{flex:1;min-width:0}
+.poster-frame-controls .icon-button{height:43px;width:43px}
+.editor-form .loop-control{display:flex;flex-direction:row;align-items:center;gap:10px;min-height:44px}
+.editor-form .loop-control input{width:18px;height:18px;padding:0;accent-color:var(--primary)}
+.poster-progress,.poster-actions{display:flex;align-items:center;gap:14px;font-size:14px;flex-wrap:wrap}
+.poster-editor:disabled{opacity:.65}
+@media(max-width:620px){.lineage-altar{max-width:360px;margin:28px auto 0}.ritual-belief{margin-top:24px}.poster-frame-controls{gap:10px}.post-play{width:52px;height:52px}}
+@media(prefers-reduced-motion:reduce){.post-play{transition:none}}

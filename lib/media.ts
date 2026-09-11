@@ -17,11 +17,12 @@ export async function mediaHasAudio(id:string):Promise<boolean>{
   const input=await openStoredVideo(m.storageKey,m.size);
   try{return !!await input.getPrimaryAudioTrack()}finally{input.dispose()}
 }
-export async function uploadMedia(req:Request,purpose:HeroMediaPurpose|"post"="post"){
+export async function uploadMedia(req:Request,purpose:HeroMediaPurpose|"post"|"post-poster"="post"){
   const {BUCKET}=runtime();const mime=req.headers.get("content-type")?.split(";")[0]||"";
   if(!["image/jpeg","image/png","image/webp","video/mp4"].includes(mime))throw new HttpError(400,"仅支持 JPG、PNG、WebP 图片或 H.264 MP4 视频。");
   const kind=mime.startsWith("video")?"video":"image",max=(kind==="video"?50:10)*1024*1024;
-  if(purpose!=="post"&&((purpose==="hero-poster")!==(kind==="image")))throw new HttpError(400,"首页素材类型不正确。");
+  if(purpose!=="post"&&((["hero-poster","post-poster"].includes(purpose))!==(kind==="image")))throw new HttpError(400,"素材类型不正确。");
+  if(purpose==="post-poster"&&mime!=="image/webp")throw new HttpError(400,"请先将封面处理为 WebP 图片。");
   const size=Number(req.headers.get("content-length"));if(!Number.isSafeInteger(size)||size<=0||size>max)throw new HttpError(413,"图片不能超过10 MB，视频不能超过50 MB。");
   const id=crypto.randomUUID(),key="uploads/"+id;
   try{
@@ -48,13 +49,13 @@ export async function uploadMedia(req:Request,purpose:HeroMediaPurpose|"post"="p
     }
     const ratio=width/height;
     if(!Number.isFinite(ratio)||width<90||height<90||width>8192||height>8192||Math.min(Math.abs(ratio/(16/9)-1),Math.abs(ratio/(9/16)-1))>.01)throw new HttpError(400,"媒体画幅必须为16:9或9:16，请调整后上传。");
-    if(purpose==="hero-poster"&&(Math.max(width,height)>960||size>250000))throw new HttpError(400,"首页封面过大，请重新生成。");
+    if(["hero-poster","post-poster"].includes(purpose)&&(Math.max(width,height)>960||size>250000))throw new HttpError(400,"封面过大，请重新生成。");
     await database().prepare("INSERT INTO media (id,storageKey,mime,kind,width,height,size,createdAt,purpose,durationMs,frameRateMilli,hasAudio) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(id,key,mime,kind,width,height,size,Date.now(),purpose,durationMs,frameRateMilli,hasAudio?1:0).run();
     return {id,kind,width,height,size,hasAudio};
   }catch(error){await BUCKET.delete(key);if(error instanceof HttpError)throw error;throw new HttpError(400,"无法读取媒体文件，请检查格式后重试。")}
 }
 export async function serveMedia(req:Request,id:string){
-  const m=await database().prepare("SELECT m.*, (EXISTS (SELECT 1 FROM posts p WHERE p.mediaId=m.id AND p.status='published' AND m.purpose='post') OR EXISTS (SELECT 1 FROM homepage_settings h WHERE h.videoId=m.id OR h.posterId=m.id)) AS isPublic FROM media m WHERE m.id=?").bind(id).first<{storageKey:string;mime:string;size:number;isPublic:number}>();
+  const m=await database().prepare("SELECT m.*, (EXISTS (SELECT 1 FROM posts p WHERE p.mediaId=m.id AND p.status='published' AND m.purpose='post') OR EXISTS (SELECT 1 FROM posts p WHERE p.posterId=m.id AND p.status='published' AND m.purpose='post-poster') OR EXISTS (SELECT 1 FROM homepage_settings h WHERE h.videoId=m.id OR h.posterId=m.id)) AS isPublic FROM media m WHERE m.id=?").bind(id).first<{storageKey:string;mime:string;size:number;isPublic:number}>();
   if(!m)throw new HttpError(404,"内容不存在。");
   if(!m.isPublic){try{const {admin}=await import("./auth");await admin(req)}catch{throw new HttpError(404,"内容不存在。");}}
   if(m.storageKey==="@hero")return Response.redirect(new URL("/hero.mp4",req.url),302);
