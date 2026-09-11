@@ -1,0 +1,11 @@
+import {mkdirSync,existsSync,writeFileSync,readFileSync} from "node:fs";
+import {randomBytes} from "node:crypto";
+mkdirSync(".private",{recursive:true});
+const path=".private/secrets.json";
+const secrets=existsSync(path)?JSON.parse(readFileSync(path,"utf8")):{BETTER_AUTH_SECRET:randomBytes(48).toString("base64url"),BOOTSTRAP_TOKEN:randomBytes(32).toString("base64url"),password:randomBytes(24).toString("base64url")};
+writeFileSync(path,JSON.stringify(secrets),{mode:0o600});
+const values={BETTER_AUTH_SECRET:secrets.BETTER_AUTH_SECRET,BOOTSTRAP_TOKEN:secrets.BOOTSTRAP_TOKEN,SITE_ORIGIN:"http://127.0.0.1:5173"};
+const text=Object.entries(values).map(([k,v])=>k+"="+JSON.stringify(v)).join("\n")+"\n";
+writeFileSync(".dev.vars",text,{mode:0o600});writeFileSync(".env",text,{mode:0o600});
+writeFileSync(".private/管理员登录.txt","管理员账号：capone\n初始密码："+secrets.password+"\n首次登录必须修改密码。请妥善保管此文件。\n",{mode:0o600});
+console.log("Private credentials generated; no secrets printed.");
