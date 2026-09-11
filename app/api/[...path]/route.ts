@@ -3,6 +3,7 @@ import {uploadMedia,serveMedia} from "@/lib/media";
 import {AUTO_REPLY,type Conversation} from "@/lib/types";
 import {getHomepage,updateHomepage} from "@/lib/homepage";
 import {createUploadTask,getUploadTask,cancelUploadTask,cleanupExpiredUploads,uploadTaskMedia} from "@/lib/homepage-uploads";
+import {findConsultationTopic} from "@/lib/consultation-topics";
 export const dynamic="force-dynamic";
 const POST_SELECT="SELECT p.*,m.kind,m.width,m.height FROM posts p JOIN media m ON p.mediaId=m.id ";
 async function handle(req:Request):Promise<Response>{
@@ -50,8 +51,11 @@ async function handle(req:Request):Promise<Response>{
       await throttle("chat:"+v.id,20);await throttle("chat-ip:"+req.headers.get("cf-connecting-ip"),80);
       const body=await payload(req),message=field(body.message,2000,true),requestId=field(body.requestId,80,true);
       if(!/^[a-zA-Z0-9-]{16,80}$/.test(requestId))throw new HttpError(400,"消息标识无效。");
-      const nickname=field(body.nickname,80),contact=field(body.contact,200),sourceId=field(body.sourceId,80);
-      const source=sourceId?await db.prepare("SELECT title FROM posts WHERE id=? AND status='published'").bind(sourceId).first<{title:string}>():null;
+      const nickname=field(body.nickname,80),contact=field(body.contact,200),sourceId=field(body.sourceId,80),topicId=field(body.topicId,80);
+      if(sourceId&&topicId)throw new HttpError(400,"一次留言只能选择一个咨询来源。");
+      const topic=topicId?findConsultationTopic(topicId):null;
+      if(topicId&&!topic)throw new HttpError(400,"所选咨询情境不存在，请重新选择。");
+      const source=topic?{title:topic.title}:sourceId?await db.prepare("SELECT title FROM posts WHERE id=? AND status='published'").bind(sourceId).first<{title:string}>():null;
       const old=await db.prepare("SELECT id FROM messages WHERE conversationId=? AND requestId=?").bind(v.id,requestId).first();
       if(old)return json({ok:true});
       const now=Date.now();

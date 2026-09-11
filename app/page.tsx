@@ -3,6 +3,7 @@ import {HomeProvider,ConsultButton,CopyContact,PrivacyButton,LazyJournal} from "
 import {HeroVideo} from "@/components/hero-video";
 import {getHomepage} from "@/lib/homepage";
 import {DEFAULT_HOMEPAGE} from "@/lib/homepage-types";
+import {Concerns} from "@/components/concerns";
 export const dynamic="force-dynamic";
 export default async function Home(){
   const config=await getHomepage().catch(()=>{console.error("homepage_settings_unavailable");return DEFAULT_HOMEPAGE});
@@ -15,9 +16,10 @@ export default async function Home(){
         <HeroVideo config={{videoUrl:config.videoUrl,posterUrl:config.posterUrl,width:config.width,height:config.height,hasAudio:config.hasAudio}}/>
         <div className="hero-note"><span className="note-number">01 /</span><p>真正的偏爱，<br/>经得起行动。</p><div className="fine-rule"/><span className="signature">Mr. Capone</span><span>守规矩 · 重隐私 · 不妄言</span></div>
       </div>
-      <div className="hero-bottom"><span>每一份委托，始于认真了解。</span><a href="#approach">向下探索 <ArrowDown size={16}/></a><span>卡彭｜Mr. Capone</span></div>
+      <div className="hero-bottom"><span>每一份委托，始于认真了解。</span><a href="#concerns">向下探索 <ArrowDown size={16}/></a><span>卡彭｜Mr. Capone</span></div>
     </section>
-    <section className="section introduction" id="approach"><div className="section-heading"><div><p className="eyebrow">A PERSONAL APPROACH</p><h2>私人定制，<br/>从认真了解你开始。</h2></div><p>一段关系的处境，需要被完整倾听。<br/>我们先了解实际情况，再评估是否适合承接，<br/>与你确认边界与约定。</p></div><ol className="process-list">{[["了解情况","倾听你的处境、诉求与期待。"],["评估承接","核对实际情况，明确适配与边界。"],["一对一定制","确认方案与事先约定的标准。"],["视频交付","全流程视频记录，私密交付。"],["阶段回访","观察变化，按约定安排跟进。"]].map(([title,body],i)=><li key={title}><span>0{i+1}</span><h3>{title}</h3><p>{body}</p></li>)}</ol><p className="service-note">建议观察15–30天；未达到事先书面约定标准，按约处理退款。</p></section>
+    <Concerns/>
+    <section className="section introduction" id="approach"><div className="section-heading"><div><p className="eyebrow">A PERSONAL APPROACH</p><h2>私人定制，<br/>从认真了解你开始。</h2></div><p>先把经历与期待说清楚。<br/>团队会说明传统文化服务能承接什么、不能承接什么，<br/>在你了解方案与约定后，再决定是否继续。</p></div><ol className="process-list">{[["了解经历与诉求","倾听关系经过、关键转折和你的真实期待，不急于下结论。"],["判断是否承接","结合实际情况说明服务范围与边界，不适合的委托不勉强承接。"],["确认方案与约定","评估通过后，一对一确认定制方案、交付内容及事先书面约定。"],["全流程视频交付","按确认的方案执行，以视频记录服务过程，向本人私密交付。"],["阶段回访","了解后续情况，核对约定内容，安排跟进并回应你的疑问。"]].map(([title,body],i)=><li key={title}><span>0{i+1}</span><h3>{title}</h3><p>{body}</p></li>)}</ol><p className="service-note">建议观察15–30天；未达到事先书面约定标准，按约处理退款。</p></section>
     <section className="section boundaries"><div><p className="eyebrow">OUR BOUNDARIES</p><h2>有些规矩，<br/>比一份委托更重要。</h2><p className="muted">并非每一种需求，我们都会承接。</p></div><div className="boundary-list"><article><span>01</span><div><h3>先评估，再决定。</h3><p>仅接待成年女性。每一份委托都需要了解真实情况，不以付款代替评估。</p></div></article><article><span>02</span><div><h3>有所为，也有所不为。</h3><p>陈述不实、动机不当、涉及伤害他人或需求不合理的委托，给钱也不承接。</p></div></article><article><span>03</span><div><h3>你的故事，留在这里。</h3><p>咨询与交付资料仅用于服务沟通，未经同意，不作为公开案例展示。</p></div></article></div></section>
     <LazyJournal/>
     <section className="section lineage" id="lineage"><div className="lineage-title"><p className="eyebrow">THE LINEAGE</p><h2>尊重传统，<br/>更尊重边界。</h2><span className="signature">Mr. Capone</span><p>团队首席师傅<br/>卡彭｜Mr. Capone</p><div className="case-count"><strong>3,600</strong><span>累计服务案例 · 团队自述</span></div></div><div className="lineage-copy"><h3>暹茅，亦称仙茅。</h3><p>依团队传承自述，我们承习中国茅山下茅一脉。传统分为上、中、下三支：上茅偏重测算，中茅以文科仪与调和为主，下茅属于武系法脉。</p><p>所承习的暹茅派下茅，主要传承飞降科、魂魄调和、血脉祈安等传统科仪。我们不靠恐吓取信于人，也不以夸大承诺换取信任。</p><p>真正的传承讲究规矩、因由和边界。任何事情，都要先了解实际情况，再判断是否适合介入。</p><blockquote>守规矩、重隐私、不妄言。<br/>信任，来自每一次有分寸的承接。</blockquote></div></section>
