@@ -5,11 +5,13 @@ import {getHomepage,updateHomepage} from "@/lib/homepage";
 import {createUploadTask,getUploadTask,cancelUploadTask,cleanupExpiredUploads,uploadTaskMedia} from "@/lib/homepage-uploads";
 import {findConsultationTopic} from "@/lib/consultation-topics";
 import {POST_SELECT,presentPost,savePost} from "@/lib/posts";
+import {getCampaign} from "@/lib/campaign";
 export const dynamic="force-dynamic";
 async function handle(req:Request):Promise<Response>{
  try{
   const url=new URL(req.url),path=url.pathname.slice(5),method=req.method,db=database();
   if(method!=="GET"&&method!=="HEAD")checkOrigin(req);
+  if(path==="campaign"&&method==="GET")return json(await getCampaign());
   if(path.startsWith("auth/")){
     const {auth}=await import("@/lib/auth");
     const endpoint=path.slice(5);

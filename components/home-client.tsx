@@ -10,17 +10,19 @@ type Source=ConsultSource;
 const ConsultContext=createContext<(source?:Source)=>void>(()=>{});
 export function HomeProvider({children}:{children:ReactNode}){
  const [open,setOpen]=useState(false),[loaded,setLoaded]=useState(false),[source,setSource]=useState<Source|null>(null);
+ const [contactsVisible,setContactsVisible]=useState(true);
  const [suspended,setSuspended]=useState(false),openRef=useRef(false),stoppers=useRef(new Set<()=>void>());
  const register=useCallback((stop:()=>void)=>{stoppers.current.add(stop);return()=>{stoppers.current.delete(stop)}},[]);
  function consult(s?:Source){for(const stop of stoppers.current)stop();openRef.current=true;setSuspended(true);setSource(s||null);setLoaded(true);setOpen(true)}
  function changeOpen(value:boolean){if(value){consult(source||undefined);return}openRef.current=false;setOpen(false)}
  const afterClose=useCallback(()=>{if(!openRef.current)setSuspended(false)},[]);
  useEffect(()=>{if(open||!suspended)return;const timer=setTimeout(afterClose,650);return()=>clearTimeout(timer)},[open,suspended,afterClose]);
+ useEffect(()=>{const contacts=document.getElementById("official-contact");if(!contacts){setContactsVisible(false);return}const observer=new IntersectionObserver(entries=>setContactsVisible(entries[0]?.isIntersecting??false));observer.observe(contacts);return()=>observer.disconnect()},[]);
  useEffect(()=>{
   const context=(document as Document&{modelContext?:{registerTool:(tool:unknown,options:unknown)=>Promise<void>|void}}).modelContext;if(!context)return;
   const controller=new AbortController();Promise.resolve(context.registerTool({name:"open_private_consultation",description:"打开卡彭团队私密咨询窗口；不会发送消息。",inputSchema:{type:"object",properties:{},additionalProperties:false},annotations:{readOnlyHint:false},execute(input:unknown){if(!input||typeof input!=="object"||Object.keys(input).length)throw new Error("无需输入参数");consult();return {opened:true}}},{signal:controller.signal})).catch(()=>{});return()=>controller.abort();
  },[]);
- return <ConsultContext.Provider value={consult}><PlaybackContext.Provider value={{suspended,register}}>{children}<button className="floating-consult" onClick={()=>consult()}><MessageCircle size={19}/><span>私密咨询</span></button>{loaded&&<Suspense fallback={open?<div className="consult-loading" role="status">正在打开私密咨询…<button onClick={()=>changeOpen(false)}>取消</button></div>:null}><Consultation open={open} onOpenChange={changeOpen} onAfterClose={afterClose} source={source}/></Suspense>}</PlaybackContext.Provider></ConsultContext.Provider>;
+ return <ConsultContext.Provider value={consult}><PlaybackContext.Provider value={{suspended,register}}>{children}{!contactsVisible&&<button className="floating-consult" onClick={()=>consult()}><MessageCircle size={19}/><span>私密咨询</span></button>}{loaded&&<Suspense fallback={open?<div className="consult-loading" role="status">正在打开私密咨询…<button onClick={()=>changeOpen(false)}>取消</button></div>:null}><Consultation open={open} onOpenChange={changeOpen} onAfterClose={afterClose} source={source}/></Suspense>}</PlaybackContext.Provider></ConsultContext.Provider>;
 }
 export function ConsultButton({children,className,source}:{children:ReactNode;className?:string;source?:Source}){const consult=useContext(ConsultContext);return <button className={className} onClick={()=>consult(source)}>{children}</button>}
 export function CopyContact({value,label}:{value:string;label:string}){const [copied,setCopied]=useState(false),[error,setError]=useState(false);return <><button aria-label={label} title="复制微信号" onClick={async()=>{try{await navigator.clipboard.writeText(value);setCopied(true);setError(false);setTimeout(()=>setCopied(false),2500)}catch{setError(true)}}}>{copied?<Check size={16}/>:<Copy size={16}/>}</button><span className="sr-only" aria-live="polite">{copied?"已复制 "+value:error?"复制未完成，请长按号码复制":""}</span></>}

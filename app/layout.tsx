@@ -3,6 +3,7 @@ import "./globals.css";
 import "./product.css";
 import "./concerns.css";
 import "./media-editorial.css";
+import "./campaign.css";
 
 export const metadata: Metadata = {
   title: "卡彭团队｜女性吸睛 · 私人定制",
